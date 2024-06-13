@@ -39,12 +39,28 @@ int main(int argc, const char **argv)
             printf("\n");
         }
     }
+
+    int matriz_bt[numero][numero];
+
+    if (rank == 0)
+    {
+        for (int i = 0; i < numero; i++)
+        {
+            for (int j = 0; j < numero; j++)
+            {
+                matriz_bt[j][i] = matriz_b[i][j];
+            }
+        }
+    }
+
+    
+
     //* Se supone que las matrices a y b están llenas
     MPI_SCatter(matriz_a, numero, MPI_INT, fila_a, numero, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Scatter(matriz_b, numero, MPI_INT, fila_b, numero, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Scatter(matriz_bt, numero, MPI_INT, fila_bt, numero, MPI_INT, 0, MPI_COMM_WORLD);
     for (int i = 0; i < numero; i++)
     {
-        fila_c[i] = fila_a[i] + fila_b[i];
+        fila_c[i] = fila_a[i] + fila_bt[i];
     }
     MPI_Gather(fila_c, numero, MPI_INT, matriz_c, numero, MPI_INT, 0, MPI_COMM_WORLD);
 
