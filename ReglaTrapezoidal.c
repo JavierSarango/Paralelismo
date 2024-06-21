@@ -73,8 +73,8 @@ int main(int argc, char** argv) {
 
     // Proceso 0 imprime el resultado y el tiempo de ejecución
     if (my_rank == 0) {
-        printf("Con n = %d trapezoides, nuestra estimación\n", n);
-        printf("del integral de %f a %f = %.15e\n", a, b, total_integral);
+        printf("Con n = %ld trapezoides\n", n);
+        printf("El area bajo la curva de %f a %f = %.15e\n", a, b, total_integral);
         printf("El tiempo de ejecución fue %f segundos\n", end_time - start_time);
     }
 
