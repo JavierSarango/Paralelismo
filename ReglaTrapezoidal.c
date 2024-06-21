@@ -6,7 +6,7 @@
 
 // Definición de la función a integrar
 double f(double x) {
-    return x * x; // Ejemplo: f(x) = x^2
+    return ((x * x * x) + (x * x) + (x + 1));
 }
 
 // Regla trapezoidal para un intervalo dado
@@ -41,9 +41,9 @@ int main(int argc, char** argv) {
     if (my_rank == 0) {
         printf("Ingrese a: ");
         scanf("%lf", &a);
-        printf("\nIngrese b: ");
+        printf("Ingrese b: ");
         scanf("%lf", &b);
-        printf("\nIngrese n: ");
+        printf("Ingrese n: ");
         scanf("%d", &n);
     }
 
