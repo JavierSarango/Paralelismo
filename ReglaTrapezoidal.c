@@ -27,7 +27,8 @@ double trapezoidal_rule(double local_a, double local_b, int local_n, double h) {
 }
 
 int main(int argc, char** argv) {
-    int my_rank, comm_sz, n, local_n;
+    int my_rank, comm_sz, local_n;
+    long int n;
     double a, b, h, local_a, local_b;
     double local_integral, total_integral;
     double start_time, end_time;
@@ -40,7 +41,7 @@ int main(int argc, char** argv) {
     // Solo el proceso 0 obtiene los valores de entrada
      if (my_rank == 0) {
         printf("Ingrese a, b, y n\n");
-        scanf("%lf %lf %d", &a, &b, &n);
+        scanf("%lf %lf %ld", &a, &b, &n);
     }
 
 
