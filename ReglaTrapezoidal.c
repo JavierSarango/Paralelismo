@@ -27,8 +27,8 @@ double trapezoidal_rule(double local_a, double local_b, int local_n, double h) {
 }
 
 int main(int argc, char** argv) {
-    int my_rank, comm_sz, local_n;
-    long int n;
+    int my_rank, comm_sz;
+    long int n, local_n;
     double a, b, h, local_a, local_b;
     double local_integral, total_integral;
     double start_time, end_time;
