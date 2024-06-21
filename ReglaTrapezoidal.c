@@ -38,10 +38,11 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
     
     // Solo el proceso 0 obtiene los valores de entrada
-    if (my_rank == 0) {
-        printf("Ingrese a, b y n: \n");
+     if (my_rank == 0) {
+        printf("Ingrese a, b, y n\n");
         scanf("%lf %lf %d", &a, &b, &n);
     }
+
 
     // Transmitir los valores de a, b, y n a todos los procesos
     MPI_Bcast(&a, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
