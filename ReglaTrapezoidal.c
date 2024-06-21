@@ -39,11 +39,11 @@ int main(int argc, char** argv) {
     
     // Solo el proceso 0 obtiene los valores de entrada
     if (my_rank == 0) {
-        printf("Ingrese a: \n");
+        printf("Ingrese a: ");
         scanf("%lf", &a);
-        printf("Ingrese b: \n");
+        printf("\nIngrese b: ");
         scanf("%lf", &b);
-        printf("Ingrese n: \n");
+        printf("\nIngrese n: ");
         scanf("%d", &n);
     }
 
