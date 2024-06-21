@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
     // Solo el proceso 0 obtiene los valores de entrada
     if (my_rank == 0) {
         printf("Ingrese a, b y n: \n");
-        sacanf("%lf %lf %d", &a, &b, &n);
+        scanf("%lf %lf %d", &a, &b, &n);
     }
 
     // Transmitir los valores de a, b, y n a todos los procesos
