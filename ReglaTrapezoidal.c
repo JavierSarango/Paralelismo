@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
-
+    start_time = MPI_Wtime();
     // Solo el proceso 0 obtiene los valores de entrada
     if (my_rank == 0) {
         printf("Ingrese a, b, y n\n");
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 
     // Sincronización y inicio del tiempo
     MPI_Barrier(MPI_COMM_WORLD);
-    start_time = MPI_Wtime();
+    
 
     // Calcular la integral local
     local_integral = trapezoidal_rule(local_a, local_b, local_n, h);
