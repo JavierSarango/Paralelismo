@@ -1,63 +1,83 @@
 #include <mpi.h>
 #include <stdio.h>
+#include <math.h>
 #include <stdlib.h>
 #include <time.h>
 
-int main(int argc, char *argv[]) {
-MPI_Init(&argc, &argv);
-
-int rank, size;
-MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-MPI_Comm_size(MPI_COMM_WORLD, &size);
-
-double a, b, h;
-int N;
-
-if (rank == 0) {
-    printf("Ingresa los valores de a, b y N:\n");
-    scanf("%lf %lf %d", &a, &b, &N);
+// Definición de la función a integrar
+double f(double x) {
+    return x * x; // Ejemplo: f(x) = x^2
 }
 
-MPI_Bcast(&a, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-MPI_Bcast(&b, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
+// Regla trapezoidal para un intervalo dado
+double trapezoidal_rule(double local_a, double local_b, int local_n, double h) {
+    double integral;
+    double x;
+    int i;
 
-h = (b - a) / N;
-
-double start_time, end_time;
-start_time = MPI_Wtime();
-
-double *x = malloc(N * sizeof(double));
-double *f = malloc(N * sizeof(double));
-
-MPI_Scatter(&a, N / size, MPI_DOUBLE, x, N / size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-double area_local = 0.0;
-int i;
-for (i = 0; i < N / size; i++) {
-    double x1 = x[i];
-    double x2 = x[i] + h;
-    double f1 = x1 * x1; // Ejemplo de función: x^2
-    double f2 = x2 * x2;
-    area_local += (f1 + f2) * h / 2;
-}
-
-MPI_Gather(&area_local, 1, MPI_DOUBLE, f, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-MPI_Barrier(MPI_COMM_WORLD);
-
-double area_global = 0.0;
-if (rank == 0) {
-    for (i = 0; i < size; i++) {
-        area_global += f[i];
+    integral = (f(local_a) + f(local_b)) / 2.0;
+    x = local_a;
+    for (i = 1; i <= local_n-1; i++) {
+        x += h;
+        integral += f(x);
     }
-    printf("Área bajo la curva: %.6f\n", area_global);
-    printf("Tiempo de ejecución: %.6f segundos\n", MPI_Wtime() - start_time);
+    integral *= h;
+
+    return integral;
 }
 
-free(x);
-free(f);
+int main(int argc, char** argv) {
+    int my_rank, comm_sz, n, local_n;
+    double a, b, h, local_a, local_b;
+    double local_integral, total_integral;
+    double start_time, end_time;
 
-MPI_Finalize();
-return 0;
+    // Inicializar MPI
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
+
+    // Solo el proceso 0 obtiene los valores de entrada
+    if (my_rank == 0) {
+        printf("Ingrese a, b, y n\n");
+        scanf("%lf %lf %d", &a, &b, &n);
+    }
+
+    // Transmitir los valores de a, b, y n a todos los procesos
+    MPI_Bcast(&a, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&b, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    // Calcular h y local_n
+    h = (b-a)/n;
+    local_n = n/comm_sz;
+
+    // Calcular los intervalos locales
+    local_a = a + my_rank*local_n*h;
+    local_b = local_a + local_n*h;
+
+    // Sincronización y inicio del tiempo
+    MPI_Barrier(MPI_COMM_WORLD);
+    start_time = MPI_Wtime();
+
+    // Calcular la integral local
+    local_integral = trapezoidal_rule(local_a, local_b, local_n, h);
+
+    // Reducir todas las integrales locales a la integral total
+    MPI_Reduce(&local_integral, &total_integral, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+    // Sincronización y fin del tiempo
+    end_time = MPI_Wtime();
+
+    // Proceso 0 imprime el resultado y el tiempo de ejecución
+    if (my_rank == 0) {
+        printf("Con n = %d trapezoides, nuestra estimación\n", n);
+        printf("del integral de %f a %f = %.15e\n", a, b, total_integral);
+        printf("El tiempo de ejecución fue %f segundos\n", end_time - start_time);
+    }
+
+    // Finalizar MPI
+    MPI_Finalize();
+
+    return 0;
 }
