@@ -10,12 +10,12 @@ int main(int argc, char **argv)
     int sum = 0;
     double tiempoInicio, tiempoFin;
     int rank, size;
-
+    printf("Ejecución en Paralela\n\n");
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    printf("Ejecución en Paralela\n\n");
+    
 
     if (rank == 0)
     {
