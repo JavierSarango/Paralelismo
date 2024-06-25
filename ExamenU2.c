@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include "mpi.h"
 
 int main(int argc, char **argv)
 {
@@ -22,3 +20,4 @@ int main(int argc, char **argv)
     printf("\n V[0] = %d, V[N/2] = %d, V[N-1] = %d\n\n\n", V[0], V[N / 2], V[N - 1]);
     return 0;
 }
+
