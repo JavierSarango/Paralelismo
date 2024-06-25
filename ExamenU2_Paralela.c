@@ -16,7 +16,9 @@ int main(int argc, char **argv)
 
     if (rank == 0)
     {
-        printf("Ejecución en Paralelo\n\n");
+        printf("===================================\n");
+        printf("\tEjecución en Paralelo");
+        printf("===================================\n");
         printf("Longitud del vector: \n");
         scanf("%d", &N); // Multiplo del numero de procesos
     }

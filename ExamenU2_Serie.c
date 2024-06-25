@@ -7,12 +7,15 @@ int main(int argc, char **argv)
     int N, i;
     int *V, sum = 0;
     double tiempoInicio, tiempoFin;
-    printf("Ejecución en Serie\n\n");
+    printf("===================================\n");
+    printf("\tEjecución en Paralelo");
+    printf("===================================\n");
 
     printf("\nLongitud del vector: ");
     scanf("%d", &N); // Multiplo del numero de procesos
 
     V = (int *)malloc(sizeof(int) * N);
+    printf("Con N = %d\n", N);
     tiempoInicio = clock() / (double)CLOCKS_PER_SEC;
     for (i = 0; i < N; i++)
         V[i] = rand() % 100 - 50; // inicializacion del vector
