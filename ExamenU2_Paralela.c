@@ -19,7 +19,7 @@ int main(int argc, char **argv)
         printf("===================================\n");
         printf("\tEjecución en Paralelo\n");
         printf("===================================\n");
-        printf("Longitud del vector: ");
+        printf("\nLongitud del vector: ");
         scanf("%d", &N); // Multiplo del numero de procesos
     }
 
