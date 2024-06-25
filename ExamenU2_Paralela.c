@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     for (i = 0; i < N / size; i++)
         V[i] = rand() % 100 - 50; // inicializacion del vector
 
-    MPI_Reduce(&V[0], &V[0], N / size, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&V[0], &V[0], (N / size), MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (rank == 0)
     {
