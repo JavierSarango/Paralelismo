@@ -8,7 +8,7 @@ int main(int argc, char **argv)
     int *V, sum = 0;
     double tiempoInicio, tiempoFin;
     printf("===================================\n");
-    printf("\tEjecución en Paralelo\n");
+    printf("\tEjecución en Serie\n");
     printf("===================================\n");
 
     printf("\nLongitud del vector: ");
