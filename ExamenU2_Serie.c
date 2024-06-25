@@ -15,7 +15,6 @@ int main(int argc, char **argv)
     scanf("%d", &N); // Multiplo del numero de procesos
 
     V = (int *)malloc(sizeof(int) * N);
-    printf("Con N = %d\n", N);
     tiempoInicio = clock() / (double)CLOCKS_PER_SEC;
     for (i = 0; i < N; i++)
         V[i] = rand() % 100 - 50; // inicializacion del vector
