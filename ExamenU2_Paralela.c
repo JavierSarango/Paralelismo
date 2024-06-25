@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     if (rank == 0)
     {
         printf("\n sum = %d\n", total_sum);
-        //printf("\n Tiempo de ejecucion total: %.6f segundos\n", tiempoFin - tiempoInicio);
+        printf("\n Tiempo de ejecucion total: %.6f segundos\n", tiempoFin - tiempoInicio);
         for (i = 0; i < size; i++) {
             printf("\n Tiempo de ejecucion del nodo %d: %.6f segundos\n", i, tiempoNodo - tiempoInicio);
         }
