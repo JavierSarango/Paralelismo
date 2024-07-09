@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
 
     // Calcular el area con la formula de la regla trapezoidal
     areaCalculada = regla_Trapezoidal(local_a, local_b, local_n, h);
-
+    printf("Area calculada por proceso %d = %f\n", rank, areaCalculada);
     // El reduce obtiene el area de todos los procesos
     MPI_Reduce(&areaCalculada, &areaMostrar, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
