@@ -7,7 +7,7 @@
 // Definición de la función que se va a integrar
 // f(x) = (x^3) + (x^2) + (x + 1)
 double f(double x) {
-    return ((x * x * x) + (x * x) + (x + 1));
+    return (exp(2*x**2));
 }
 
 // Regla trapezoidal para un intervalo dado
