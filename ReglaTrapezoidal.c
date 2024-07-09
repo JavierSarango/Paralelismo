@@ -11,7 +11,7 @@ double f(double x) {
 }
 
 // Regla trapezoidal para un intervalo dado
-double regla_Trapezoidal(double local_a, double local_b, int local_n, double h) {
+double regla_Trapezoidal(double local_a, double local_b, int local_n, double h, int rank) {
     // double resultado;
     // double x;
     // int i;
