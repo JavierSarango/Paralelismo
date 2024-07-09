@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
     tiempoInicio = MPI_Wtime();
 
     // Calcular el area con la formula de la regla trapezoidal
-    areaCalculada = regla_Trapezoidal(local_a, local_b, local_n, h);
+    areaCalculada = regla_Trapezoidal(local_a, local_b, local_n, h, rank);
     
     // El reduce obtiene el area de todos los procesos
     MPI_Reduce(&areaCalculada, &areaMostrar, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
