@@ -12,17 +12,34 @@ double f(double x) {
 
 // Regla trapezoidal para un intervalo dado
 double regla_Trapezoidal(double local_a, double local_b, int local_n, double h) {
-    double resultado;
+    // double resultado;
+    // double x;
+    // int i;
+
+    // resultado = (f(local_a) + f(local_b)) / 2.0;
+    // x = local_a;
+    // for (i = 1; i <= local_n-1; i++) {
+    //     x += h;
+    //     resultado += f(x);
+    // }
+    // resultado *= h;
+
+    // return resultado;
+
+     double resultado;
     double x;
     int i;
 
     resultado = (f(local_a) + f(local_b)) / 2.0;
     x = local_a;
+    printf("Proceso %d: x = %f, f(x) = %f\n", rank, x, f(x));  // Mostrar el primer valor
     for (i = 1; i <= local_n-1; i++) {
         x += h;
         resultado += f(x);
+        printf("Proceso %d: x = %f, f(x) = %f\n", rank, x, f(x));  // Mostrar los valores intermedios
     }
     resultado *= h;
+    printf("Proceso %d: x = %f, f(x) = %f\n", rank, local_b, f(local_b));  // Mostrar el último valor
 
     return resultado;
 }
