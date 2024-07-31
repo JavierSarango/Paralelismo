@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
     // Inicializar el número de nodos y el valor inicial
     inicializarArbol(&numNodos, &valorInicial, rango);
 
-    // Depuración: mostrar el número de nodos y el valor inicial
+    // Depuración: mostrar el número de nodos y el valor inicial s
     if (rango == RAIZ) {
         printf("Número de nodos: %d, Valor inicial: %d\n", numNodos, valorInicial);
         fflush(stdout);
