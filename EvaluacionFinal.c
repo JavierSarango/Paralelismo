@@ -1,108 +1,99 @@
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <mpi.h>
 
 #define RAIZ 0
 
-// Función para enviar el valor a los nodos hijos
-void enviar_a_hijos(int valor, int nodo_actual, int num_nodos) {
-    int hijo_izquierdo = nodo_actual * 2 + 1;
-    int hijo_derecho = nodo_actual * 2 + 2;
-
-    if (hijo_izquierdo < num_nodos) {
-        MPI_Send(&valor, 1, MPI_INT, hijo_izquierdo, 0, MPI_COMM_WORLD);
+// Función para solicitar el número de nodos y el valor inicial
+void inicializarArbol(int* numNodos, int* valorInicial, int rango) {
+    if (rango == RAIZ) {
+        printf("Ingrese el número de nodos para el árbol binario: ");
+        fflush(stdout);
+        scanf("%d", numNodos);
+        printf("Ingrese el valor que enviará el nodo 0: ");
+        fflush(stdout);
+        scanf("%d", valorInicial);
     }
-    if (hijo_derecho < num_nodos) {
-        MPI_Send(&valor, 1, MPI_INT, hijo_derecho, 0, MPI_COMM_WORLD);
+    MPI_Bcast(numNodos, 1, MPI_INT, RAIZ, MPI_COMM_WORLD);
+    MPI_Bcast(valorInicial, 1, MPI_INT, RAIZ, MPI_COMM_WORLD);
+}
+
+// Función para encontrar los hijos izquierdo y derecho de un nodo dado
+void encontrarHijos(int nodo, int numNodos, int* hijoIzquierdo, int* hijoDerecho) {
+    *hijoIzquierdo = 2 * nodo + 1;
+    *hijoDerecho = 2 * nodo + 2;
+    if (*hijoIzquierdo >= numNodos) {
+        *hijoIzquierdo = -1;
+    }
+    if (*hijoDerecho >= numNodos) {
+        *hijoDerecho = -1;
     }
 }
 
-// Función para recibir valores de los nodos hijos y sumar los valores
-int recibir_y_sumar(int nodo_actual, int num_nodos) {
-    int suma = 0;
-    int valor_recibido;
-    int num_hijos = 2;
-    int hijo_izquierdo = nodo_actual * 2 + 1;
-    int hijo_derecho = nodo_actual * 2 + 2;
+// Función para realizar el recorrido del árbol y sumar parcial
+int recorrerArbol(int nodo, int valor, int numNodos, int tamanio) {
+    int hijoIzquierdo, hijoDerecho;
+    encontrarHijos(nodo, numNodos, &hijoIzquierdo, &hijoDerecho);
 
-    for (int i = 0; i < num_hijos; i++) {
-        int hijo = (i == 0) ? hijo_izquierdo : hijo_derecho;
-        if (hijo < num_nodos) {
-            MPI_Recv(&valor_recibido, 1, MPI_INT, hijo, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            suma += valor_recibido;
-            printf("Nodo %d recibió valor %d de su hijo %d\n", nodo_actual, valor_recibido, hijo);
-        }
+    int sumaIzquierda = 0, sumaDerecha = 0;
+
+    if (hijoIzquierdo != -1 && hijoIzquierdo < numNodos) {
+        int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
+        MPI_Send(&valor, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD);
+        MPI_Recv(&sumaIzquierda, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
-    return suma;
+
+    if (hijoDerecho != -1 && hijoDerecho < numNodos) {
+        int rangoHijoDerecho = hijoDerecho % tamanio;
+        MPI_Send(&valor, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD);
+        MPI_Recv(&sumaDerecha, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+
+    int sumaParcial = valor + sumaIzquierda + sumaDerecha;
+
+    if (nodo != RAIZ) {
+        int rangoPadre = (nodo - 1) / 2 % tamanio;
+        MPI_Send(&sumaParcial, 1, MPI_INT, rangoPadre, 0, MPI_COMM_WORLD);
+    }
+
+    return sumaParcial;
 }
 
-// Función principal
-int main(int argc, char *argv[]) {
-    int rango, num_procesos;
-    int valor_inicial;
-    int num_nodos;
-    double tiempo_inicio, tiempo_fin;
+int main(int argc, char** argv) {
+    int rango, tamanio;
+    int numNodos, valorInicial;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rango);
-    MPI_Comm_size(MPI_COMM_WORLD, &num_procesos);
+    MPI_Comm_size(MPI_COMM_WORLD, &tamanio);
 
-    if (argc != 3) {
-        if (rango == RAIZ) {
-            fprintf(stderr, "Uso: %s <valor_inicial> <num_nodos>\n", argv[0]);
-        }
-        MPI_Finalize();
-        return EXIT_FAILURE;
-    }
+    double inicio = MPI_Wtime(); // Inicio del tiempo de ejecución
 
-    valor_inicial = atoi(argv[1]);
-    num_nodos = atoi(argv[2]);
+    // Inicializar el número de nodos y el valor inicial
+    inicializarArbol(&numNodos, &valorInicial, rango);
 
     if (rango == RAIZ) {
-        printf("Número total de nodos en el árbol: %d\n", num_nodos);
-        printf("Número total de procesos: %d\n", num_procesos);
-        printf("Valor inicial para los nodos: %d\n", valor_inicial);
-        tiempo_inicio = MPI_Wtime();
+        printf("Número de nodos: %d, Valor inicial: %d\n", numNodos, valorInicial);
+        fflush(stdout);
     }
 
-    // Calcular el índice del nodo actual para cada proceso
-    int nodo_actual = rango;
+    int sumaTotal = 0;
 
-    // Lógica de envío y recepción de mensajes
-    if (nodo_actual < num_nodos) {
-        if (nodo_actual == RAIZ) {
-            // El nodo raíz envía el valor inicial a sus hijos
-            enviar_a_hijos(valor_inicial, nodo_actual, num_nodos);
-            // Recibe la suma de sus hijos y suma el valor inicial
-            int resultado = recibir_y_sumar(nodo_actual, num_nodos) + valor_inicial;
-            printf("Resultado final en el nodo 0: %d\n", resultado);
-        } else {
-            int valor_recibido;
-            // Nodo recibe el valor inicial del nodo raíz
-            MPI_Recv(&valor_recibido, 1, MPI_INT, RAIZ, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-            // Suma el valor recibido con los valores de los hijos
-            int valor_suma = valor_recibido;
-            printf("Nodo %d recibió valor %d de su padre\n", nodo_actual, valor_recibido);
-
-            if (nodo_actual * 2 + 1 < num_nodos) {
-                // Enviar el valor recibido a los hijos
-                enviar_a_hijos(valor_suma, nodo_actual, num_nodos);
-                // Recibir y sumar los valores de los hijos
-                valor_suma += recibir_y_sumar(nodo_actual, num_nodos);
-            }
-
-            // Enviar la suma parcial al nodo padre
-            MPI_Send(&valor_suma, 1, MPI_INT, RAIZ, 0, MPI_COMM_WORLD);
-            printf("Nodo %d envió suma parcial %d al nodo padre\n", nodo_actual, valor_suma);
-        }
+    // Cada proceso maneja múltiples nodos si numNodos > tamanio
+    if (rango < numNodos) {
+        sumaTotal = recorrerArbol(rango, valorInicial, numNodos, tamanio);
     }
+
+    // Barrera para esperar que todos los procesos terminen
+    MPI_Barrier(MPI_COMM_WORLD);
 
     if (rango == RAIZ) {
-        tiempo_fin = MPI_Wtime();
-        printf("Tiempo de ejecución: %f segundos\n", tiempo_fin - tiempo_inicio);
+        double fin = MPI_Wtime(); // Fin del tiempo de ejecución
+        printf("Resultado final de la suma en el nodo raíz: %d\n", sumaTotal);
+        printf("Tiempo total de ejecución: %f segundos\n", fin - inicio);
+        fflush(stdout);
     }
 
     MPI_Finalize();
-    return EXIT_SUCCESS;
+    return 0;
 }
