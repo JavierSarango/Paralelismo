@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
     MPI_Barrier(MPI_COMM_WORLD);
 
     if (rango == RAIZ) {
-        double fin = MPI_Wtime(); // Fin del tiempo de ejecución
+        double fin = MPI_Wtime(); // Fin del tiempo de ejecución 1
         printf("Resultado final de la suma en el nodo raíz: %d\n", sumaTotal);
         printf("Tiempo total de ejecución: %f segundos\n", fin - inicio);
         fflush(stdout);
