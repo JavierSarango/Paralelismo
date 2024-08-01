@@ -47,16 +47,12 @@ void enviarMensajes(int nodo, int valor, int numNodos, int tamanio) {
 }
 
 // Función para recibir mensajes de los padres y sumar los valores de los hijos
-int recibirYSumar(int nodo, int numNodos, int tamanio) {
+int recibirYSumar(int nodo, int valor, int numNodos, int tamanio) {
     int hijoIzquierdo, hijoDerecho;
     encontrarHijos(nodo, numNodos, &hijoIzquierdo, &hijoDerecho);
 
-    int sumaIzquierda = 0, sumaDerecha = 0, valor = 0;
+    int sumaIzquierda = 0, sumaDerecha = 0;
 
-    // Recibir valor inicial del padre
-    MPI_Recv(&valor, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-    // Si tiene hijos, esperar sus sumas parciales
     if (hijoIzquierdo != -1) {
         int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
         MPI_Recv(&sumaIzquierda, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -108,8 +104,8 @@ int main(int argc, char** argv) {
 
     int sumaTotal = 0;
     // Recibir mensajes de los hijos y sumar
-    for (int nodo = rango; nodo < numNodos; nodo += tamanio) {
-        sumaTotal += recibirYSumar(nodo, numNodos, tamanio);
+    for (int nodo = numNodos - 1; nodo >= rango; nodo -= tamanio) {
+        sumaTotal += recibirYSumar(nodo, valorInicial, numNodos, tamanio);
     }
 
     // Barrera para esperar que todos los procesos terminen
