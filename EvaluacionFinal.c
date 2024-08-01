@@ -36,16 +36,12 @@ void enviarMensajes(int nodo, int valor, int numNodos, int tamanio) {
     encontrarHijos(nodo, numNodos, &hijoIzquierdo, &hijoDerecho);
 
     if (hijoIzquierdo != -1) {
-        int rangoHijoIzquierdo;
-        MPI_Comm_rank(MPI_COMM_WORLD, &rangoHijoIzquierdo);
-        rangoHijoIzquierdo = hijoIzquierdo % tamanio;
+        int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
         MPI_Send(&valor, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD);
     }
 
     if (hijoDerecho != -1) {
-        int rangoHijoDerecho;
-        MPI_Comm_rank(MPI_COMM_WORLD, &rangoHijoDerecho);
-        rangoHijoDerecho = hijoDerecho % tamanio;
+        int rangoHijoDerecho = hijoDerecho % tamanio;
         MPI_Send(&valor, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD);
     }
 }
@@ -71,7 +67,7 @@ int recibirYSumar(int nodo, int valor, int numNodos, int tamanio) {
     int sumaParcial = valor + sumaIzquierda + sumaDerecha;
     int rangoProceso;
     MPI_Comm_rank(MPI_COMM_WORLD, &rangoProceso); // Obtener el rango del proceso actual
-    //printf("Nodo %d (Proceso %d): suma parcial = %d\n", nodo, rangoProceso, sumaParcial);
+    printf("Nodo %d (Proceso %d): suma parcial = %d\n", nodo, rangoProceso, sumaParcial);
     fflush(stdout);
 
     if (nodo != RAIZ) {
@@ -111,8 +107,15 @@ int main(int argc, char** argv) {
 
     int sumaTotal = 0;
     // Recibir mensajes de los hijos y sumar
-    for (int nodo = numNodos - 1; nodo >= rango; nodo -= tamanio) {
-        sumaTotal += recibirYSumar(nodo, valorInicial, numNodos, tamanio);
+    if (rango == RAIZ) {
+        for (int nodo = 0; nodo < numNodos; ++nodo) {
+            sumaTotal += recibirYSumar(nodo, valorInicial, numNodos, tamanio);
+        }
+    } else {
+        int nodo = rango;
+        if (nodo < numNodos) {
+            sumaTotal = recibirYSumar(nodo, valorInicial, numNodos, tamanio);
+        }
     }
 
     // Barrera para esperar que todos los procesos terminen
