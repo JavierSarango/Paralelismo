@@ -31,12 +31,13 @@ void encontrarHijos(int nodo, int numNodos, int* hijoIzquierdo, int* hijoDerecho
 }
 
 // Función para realizar el recorrido del árbol y sumar parcial
-int recorrerArbol(int nodo, int valor, int numNodos, int tamanio) {
+void recorrerArbol(int nodo, int valor, int numNodos, int tamanio) {
     int hijoIzquierdo, hijoDerecho;
     encontrarHijos(nodo, numNodos, &hijoIzquierdo, &hijoDerecho);
 
     int sumaIzquierda = 0, sumaDerecha = 0;
 
+    // Enviar valor a los hijos y recibir sumas parciales
     if (hijoIzquierdo != -1 && hijoIzquierdo < numNodos) {
         int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
         MPI_Send(&valor, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD);
@@ -56,7 +57,11 @@ int recorrerArbol(int nodo, int valor, int numNodos, int tamanio) {
         MPI_Send(&sumaParcial, 1, MPI_INT, rangoPadre, 0, MPI_COMM_WORLD);
     }
 
-    return sumaParcial;
+    // Solo el nodo raíz debe acumular la suma total
+    if (nodo == RAIZ) {
+        printf("Nodo raíz: suma total = %d\n", sumaParcial);
+        fflush(stdout);
+    }
 }
 
 int main(int argc, char** argv) {
@@ -77,11 +82,9 @@ int main(int argc, char** argv) {
         fflush(stdout);
     }
 
-    int sumaTotal = 0;
-
     // Cada proceso maneja múltiples nodos si numNodos > tamanio
     if (rango < numNodos) {
-        sumaTotal = recorrerArbol(rango, valorInicial, numNodos, tamanio);
+        recorrerArbol(rango, valorInicial, numNodos, tamanio);
     }
 
     // Barrera para esperar que todos los procesos terminen
@@ -89,7 +92,6 @@ int main(int argc, char** argv) {
 
     if (rango == RAIZ) {
         double fin = MPI_Wtime(); // Fin del tiempo de ejecución
-        printf("Resultado final de la suma en el nodo raíz: %d\n", sumaTotal);
         printf("Tiempo total de ejecución: %f segundos\n", fin - inicio);
         fflush(stdout);
     }
