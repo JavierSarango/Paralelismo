@@ -54,17 +54,17 @@ int recibirYSumar(int nodo, int numNodos, int tamanio) {
     int sumaIzquierda = 0, sumaDerecha = 0, valor = 0;
 
     // Recibir valor inicial del padre
-    MPI_Recv(&valor, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(&valor, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD);
 
     // Si tiene hijos, esperar sus sumas parciales
     if (hijoIzquierdo != -1) {
         int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
-        MPI_Recv(&sumaIzquierda, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&sumaIzquierda, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD);
     }
 
     if (hijoDerecho != -1) {
         int rangoHijoDerecho = hijoDerecho % tamanio;
-        MPI_Recv(&sumaDerecha, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&sumaDerecha, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD);
     }
 
     int sumaParcial = valor + sumaIzquierda + sumaDerecha;
@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
     }
 
     // Barrera para asegurarse de que todos los procesos hayan enviado los mensajes
-    //MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
 
     int sumaTotal = 0;
     // Recibir mensajes de los hijos y sumar
@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
     }
 
     // Barrera para esperar que todos los procesos terminen
-    //MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
 
     if (rango == RAIZ) {
         double fin = MPI_Wtime(); // Fin del tiempo de ejecución
