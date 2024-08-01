@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
     }
 
     // Barrera para esperar que todos los procesos terminen
-    MPI_Barrier(MPI_COMM_WORLD);
+    //MPI_Barrier(MPI_COMM_WORLD);
 
     if (rango == RAIZ) {
         double fin = MPI_Wtime(); // Fin del tiempo de ejecución
