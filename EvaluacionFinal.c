@@ -56,10 +56,6 @@ int recorrerArbol(int nodo, int rango, int valor, int numNodos, int tamanio) {
     if (nodo != RAIZ) {
         int rangoPadre = (nodo - 1) / 2 % tamanio;
         MPI_Send(&sumaParcial, 1, MPI_INT, rangoPadre, 0, MPI_COMM_WORLD);
-    } else {
-        MPI_Barrier(MPI_COMM_WORLD);
-        printf("Resultado final de la suma en el nodo raíz: %d\n", sumaParcial+valor);
-        fflush(stdout);
     }
 
     return sumaParcial;
@@ -73,6 +69,8 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rango);
     MPI_Comm_size(MPI_COMM_WORLD, &tamanio);
 
+    double inicio = MPI_Wtime(); // Inicio del tiempo de ejecución
+
     // Inicializar el número de nodos y el valor inicial
     inicializarArbol(&numNodos, &valorInicial, rango);
 
@@ -85,6 +83,15 @@ int main(int argc, char** argv) {
     // Cada proceso maneja múltiples nodos si numNodos > tamanio
     for (int nodo = rango; nodo < numNodos; nodo += tamanio) {
         recorrerArbol(nodo, rango, valorInicial, numNodos, tamanio);
+    }
+
+    // Barrera para esperar que todos los procesos terminen
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    if (rango == RAIZ) {
+        double fin = MPI_Wtime(); // Fin del tiempo de ejecución
+        printf("Tiempo total de ejecución: %f segundos\n", fin - inicio);
+        fflush(stdout);
     }
 
     MPI_Finalize();
