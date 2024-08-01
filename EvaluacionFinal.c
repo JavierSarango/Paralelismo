@@ -61,17 +61,17 @@ void liberar_arbol(NodoArbol *raiz) {
 }
 
 // Función para asignar tareas a los nodos de MPI
-void asignar_tareas(NodoArbol *raiz, int rango) {
+void asignar_tareas(NodoArbol *raiz, int rango, int tamaño) {
     if (raiz == NULL) {
         return;
     }
-    if (2 * rango + 1 < MPI_COMM_WORLD) {
+    if (2 * rango + 1 < tamaño) {
         MPI_Send(&raiz->valor, 1, MPI_INT, 2 * rango + 1, 0, MPI_COMM_WORLD);
-        asignar_tareas(raiz->izquierdo, 2 * rango + 1);
+        asignar_tareas(raiz->izquierdo, 2 * rango + 1, tamaño);
     }
-    if (2 * rango + 2 < MPI_COMM_WORLD) {
+    if (2 * rango + 2 < tamaño) {
         MPI_Send(&raiz->valor, 1, MPI_INT, 2 * rango + 2, 0, MPI_COMM_WORLD);
-        asignar_tareas(raiz->derecho, 2 * rango + 2);
+        asignar_tareas(raiz->derecho, 2 * rango + 2, tamaño);
     }
 }
 
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 
     // Enviar el valor a sumar desde el nodo raíz a los hijos
     if (rango == 0) {
-        asignar_tareas(raiz, rango);
+        asignar_tareas(raiz, rango, tamaño);
     } else {
         valor_a_sumar = recibir_tareas(rango);
     }
