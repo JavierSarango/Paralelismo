@@ -30,8 +30,24 @@ void encontrarHijos(int nodo, int numNodos, int* hijoIzquierdo, int* hijoDerecho
     }
 }
 
-// Función para realizar el recorrido del árbol y suma parcial
-int recorrerArbol(int nodo, int rango, int valor, int numNodos, int tamanio) {
+// Función para enviar mensajes a los hijos
+void enviarMensajes(int nodo, int valor, int numNodos, int tamanio) {
+    int hijoIzquierdo, hijoDerecho;
+    encontrarHijos(nodo, numNodos, &hijoIzquierdo, &hijoDerecho);
+
+    if (hijoIzquierdo != -1) {
+        int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
+        MPI_Send(&valor, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD);
+    }
+
+    if (hijoDerecho != -1) {
+        int rangoHijoDerecho = hijoDerecho % tamanio;
+        MPI_Send(&valor, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD);
+    }
+}
+
+// Función para recibir mensajes de los padres y sumar los valores de los hijos
+int recibirYSumar(int nodo, int valor, int numNodos, int tamanio) {
     int hijoIzquierdo, hijoDerecho;
     encontrarHijos(nodo, numNodos, &hijoIzquierdo, &hijoDerecho);
 
@@ -39,18 +55,16 @@ int recorrerArbol(int nodo, int rango, int valor, int numNodos, int tamanio) {
 
     if (hijoIzquierdo != -1) {
         int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
-        MPI_Send(&valor, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD);
         MPI_Recv(&sumaIzquierda, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
     if (hijoDerecho != -1) {
         int rangoHijoDerecho = hijoDerecho % tamanio;
-        MPI_Send(&valor, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD);
         MPI_Recv(&sumaDerecha, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
     int sumaParcial = valor + sumaIzquierda + sumaDerecha;
-    printf("Nodo %d (Proceso %d): suma parcial = %d\n", nodo, rango, sumaParcial);
+    printf("Nodo %d (Proceso %d): suma parcial = %d\n", nodo, nodo % tamanio, sumaParcial);
     fflush(stdout);
 
     if (nodo != RAIZ) {
@@ -80,10 +94,18 @@ int main(int argc, char** argv) {
         fflush(stdout);
     }
 
-    int sumaTotal = 0;
-    // Cada proceso maneja múltiples nodos si numNodos > tamanio
+    // Enviar mensajes a los hijos primero
     for (int nodo = rango; nodo < numNodos; nodo += tamanio) {
-        sumaTotal += recorrerArbol(nodo, rango, valorInicial, numNodos, tamanio);
+        enviarMensajes(nodo, valorInicial, numNodos, tamanio);
+    }
+
+    // Barrera para asegurarse de que todos los procesos hayan enviado los mensajes
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    int sumaTotal = 0;
+    // Recibir mensajes de los hijos y sumar
+    for (int nodo = numNodos - 1; nodo >= rango; nodo -= tamanio) {
+        sumaTotal += recibirYSumar(nodo, valorInicial, numNodos, tamanio);
     }
 
     // Barrera para esperar que todos los procesos terminen
