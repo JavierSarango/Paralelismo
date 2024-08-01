@@ -36,12 +36,16 @@ void enviarMensajes(int nodo, int valor, int numNodos, int tamanio) {
     encontrarHijos(nodo, numNodos, &hijoIzquierdo, &hijoDerecho);
 
     if (hijoIzquierdo != -1) {
-        int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
+        int rangoHijoIzquierdo;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rangoHijoIzquierdo);
+        rangoHijoIzquierdo = hijoIzquierdo % tamanio;
         MPI_Send(&valor, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD);
     }
 
     if (hijoDerecho != -1) {
-        int rangoHijoDerecho = hijoDerecho % tamanio;
+        int rangoHijoDerecho;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rangoHijoDerecho);
+        rangoHijoDerecho = hijoDerecho % tamanio;
         MPI_Send(&valor, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD);
     }
 }
