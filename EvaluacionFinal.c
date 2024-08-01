@@ -46,7 +46,7 @@ void enviarMensajes(int nodo, int valor, int numNodos, int tamanio) {
     }
 }
 
-// Función para recibir mensajes de los padres y sumar los valores de los hijos
+// Función para recibir mensajes de los hijos y sumar los valores de los hijos
 int recibirYSumar(int nodo, int valor, int numNodos, int tamanio) {
     int hijoIzquierdo, hijoDerecho;
     encontrarHijos(nodo, numNodos, &hijoIzquierdo, &hijoDerecho);
