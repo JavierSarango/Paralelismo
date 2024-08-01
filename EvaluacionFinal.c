@@ -42,15 +42,21 @@ int recorrerArbol(int nodo, int valor, int numNodos, int tamanio) {
         int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
         MPI_Send(&valor, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD);
         MPI_Recv(&sumaIzquierda, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        printf("Nodo %d recibió suma parcial de su hijo izquierdo %d: %d\n", nodo, hijoIzquierdo, sumaIzquierda);
+        fflush(stdout);
     }
 
     if (hijoDerecho != -1 && hijoDerecho < numNodos) {
         int rangoHijoDerecho = hijoDerecho % tamanio;
         MPI_Send(&valor, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD);
         MPI_Recv(&sumaDerecha, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        printf("Nodo %d recibió suma parcial de su hijo derecho %d: %d\n", nodo, hijoDerecho, sumaDerecha);
+        fflush(stdout);
     }
 
     int sumaParcial = valor + sumaIzquierda + sumaDerecha;
+    printf("Nodo %d (Proceso %d): suma parcial = %d\n", nodo, MPI_COMM_WORLD, sumaParcial);
+    fflush(stdout);
 
     if (nodo != RAIZ) {
         int rangoPadre = (nodo - 1) / 2 % tamanio;
@@ -78,10 +84,10 @@ int main(int argc, char** argv) {
         fflush(stdout);
     }
 
-    // Cada proceso maneja múltiples nodos si numNodos > tamanio
     int sumaTotal = 0;
-    if (rango < numNodos) {
-        sumaTotal = recorrerArbol(rango, valorInicial, numNodos, tamanio);
+    // Cada proceso maneja múltiples nodos si numNodos > tamanio
+    for (int nodo = rango; nodo < numNodos; nodo += tamanio) {
+        sumaTotal += recorrerArbol(nodo, valorInicial, numNodos, tamanio);
     }
 
     // Barrera para esperar que todos los procesos terminen
@@ -89,7 +95,7 @@ int main(int argc, char** argv) {
 
     if (rango == RAIZ) {
         double fin = MPI_Wtime(); // Fin del tiempo de ejecución
-        printf("Nodo raíz: suma total = %d\n", sumaTotal);
+        printf("Resultado final de la suma en el nodo raíz: %d\n", sumaTotal);
         printf("Tiempo total de ejecución: %f segundos\n", fin - inicio);
         fflush(stdout);
     }
