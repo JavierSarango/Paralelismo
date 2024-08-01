@@ -31,41 +31,49 @@ void encontrarHijos(int nodo, int numNodos, int* hijoIzquierdo, int* hijoDerecho
 }
 
 // Función para enviar mensajes a los hijos
-void enviarMensajes(int nodo, int valor, int numNodos) {
+void enviarMensajes(int nodo, int valor, int numNodos, int tamanio) {
     int hijoIzquierdo, hijoDerecho;
     encontrarHijos(nodo, numNodos, &hijoIzquierdo, &hijoDerecho);
 
     if (hijoIzquierdo != -1) {
-        MPI_Send(&valor, 1, MPI_INT, hijoIzquierdo, 0, MPI_COMM_WORLD);
+        int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
+        MPI_Send(&valor, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD);
     }
 
     if (hijoDerecho != -1) {
-        MPI_Send(&valor, 1, MPI_INT, hijoDerecho, 0, MPI_COMM_WORLD);
+        int rangoHijoDerecho = hijoDerecho % tamanio;
+        MPI_Send(&valor, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD);
     }
 }
 
 // Función para recibir mensajes de los padres y sumar los valores de los hijos
-int recibirYSumar(int nodo, int valor, int numNodos) {
+int recibirYSumar(int nodo, int numNodos, int tamanio) {
     int hijoIzquierdo, hijoDerecho;
     encontrarHijos(nodo, numNodos, &hijoIzquierdo, &hijoDerecho);
 
-    int sumaIzquierda = 0, sumaDerecha = 0;
+    int sumaIzquierda = 0, sumaDerecha = 0, valor = 0;
 
+    // Recibir valor inicial del padre
+    MPI_Recv(&valor, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+    // Si tiene hijos, esperar sus sumas parciales
     if (hijoIzquierdo != -1) {
-        MPI_Recv(&sumaIzquierda, 1, MPI_INT, hijoIzquierdo, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
+        MPI_Recv(&sumaIzquierda, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
     if (hijoDerecho != -1) {
-        MPI_Recv(&sumaDerecha, 1, MPI_INT, hijoDerecho, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        int rangoHijoDerecho = hijoDerecho % tamanio;
+        MPI_Recv(&sumaDerecha, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
     int sumaParcial = valor + sumaIzquierda + sumaDerecha;
-    printf("Nodo %d: suma parcial = %d\n", nodo, sumaParcial);
+    printf("Nodo %d (Proceso %d): suma parcial = %d\n", nodo, nodo % tamanio, sumaParcial);
     fflush(stdout);
 
     if (nodo != RAIZ) {
-        int padre = (nodo - 1) / 2;
-        MPI_Send(&sumaParcial, 1, MPI_INT, padre, 0, MPI_COMM_WORLD);
+        int rangoPadre = (nodo - 1) / 2 % tamanio;
+        MPI_Send(&sumaParcial, 1, MPI_INT, rangoPadre, 0, MPI_COMM_WORLD);
     }
 
     return sumaParcial;
@@ -92,7 +100,7 @@ int main(int argc, char** argv) {
 
     // Enviar mensajes a los hijos primero
     for (int nodo = rango; nodo < numNodos; nodo += tamanio) {
-        enviarMensajes(nodo, valorInicial, numNodos);
+        enviarMensajes(nodo, valorInicial, numNodos, tamanio);
     }
 
     // Barrera para asegurarse de que todos los procesos hayan enviado los mensajes
@@ -100,10 +108,8 @@ int main(int argc, char** argv) {
 
     int sumaTotal = 0;
     // Recibir mensajes de los hijos y sumar
-    for (int nodo = numNodos - 1; nodo >= 0; nodo--) {
-        if (nodo % tamanio == rango) {
-            sumaTotal += recibirYSumar(nodo, valorInicial, numNodos);
-        }
+    for (int nodo = numNodos - 1; nodo >= rango; nodo -= tamanio) {
+        sumaTotal += recibirYSumar(nodo, numNodos, tamanio);
     }
 
     // Barrera para esperar que todos los procesos terminen
