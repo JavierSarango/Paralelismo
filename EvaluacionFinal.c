@@ -57,6 +57,7 @@ int recorrerArbol(int nodo, int rango, int valor, int numNodos, int tamanio) {
         int rangoPadre = (nodo - 1) / 2 % tamanio;
         MPI_Send(&sumaParcial, 1, MPI_INT, rangoPadre, 0, MPI_COMM_WORLD);
     } else {
+        MPI_Barrier(MPI_COMM_WORLD);
         printf("Resultado final de la suma en el nodo raíz: %d\n", sumaParcial+valor);
         fflush(stdout);
     }
