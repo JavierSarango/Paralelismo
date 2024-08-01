@@ -35,12 +35,12 @@ void enviarMensajes(int nodo, int valor, int numNodos, int tamanio) {
     int hijoIzquierdo, hijoDerecho;
     encontrarHijos(nodo, numNodos, &hijoIzquierdo, &hijoDerecho);
 
-    if (hijoIzquierdo != -1) {
+    if (hijoIzquierdo != -1 && hijoIzquierdo < numNodos) {
         int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
         MPI_Send(&valor, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD);
     }
 
-    if (hijoDerecho != -1) {
+    if (hijoDerecho != -1 && hijoDerecho < numNodos) {
         int rangoHijoDerecho = hijoDerecho % tamanio;
         MPI_Send(&valor, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD);
     }
@@ -54,12 +54,12 @@ int recibirYSumar(int nodo, int valor, int numNodos, int tamanio) {
     int sumaIzquierda = 0, sumaDerecha = 0;
 
     // Recibir suma de hijos
-    if (hijoIzquierdo != -1) {
+    if (hijoIzquierdo != -1 && hijoIzquierdo < numNodos) {
         int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
         MPI_Recv(&sumaIzquierda, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
-    if (hijoDerecho != -1) {
+    if (hijoDerecho != -1 && hijoDerecho < numNodos) {
         int rangoHijoDerecho = hijoDerecho % tamanio;
         MPI_Recv(&sumaDerecha, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
@@ -72,7 +72,9 @@ int recibirYSumar(int nodo, int valor, int numNodos, int tamanio) {
 
     if (nodo != RAIZ) {
         int rangoPadre = (nodo - 1) / 2 % tamanio;
-        MPI_Send(&sumaParcial, 1, MPI_INT, rangoPadre, 0, MPI_COMM_WORLD);
+        if (rangoPadre >= 0) {
+            MPI_Send(&sumaParcial, 1, MPI_INT, rangoPadre, 0, MPI_COMM_WORLD);
+        }
     }
 
     return sumaParcial;
