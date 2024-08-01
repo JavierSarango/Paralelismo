@@ -40,13 +40,13 @@ int recorrerArbol(int nodo, int rango, int valor, int numNodos, int tamanio) {
     if (hijoIzquierdo != -1) {
         int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
         MPI_Send(&valor, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD);
-        MPI_Recv(&sumaIzquierda, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&sumaIzquierda, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD);
     }
 
     if (hijoDerecho != -1) {
         int rangoHijoDerecho = hijoDerecho % tamanio;
         MPI_Send(&valor, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD);
-        MPI_Recv(&sumaDerecha, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&sumaDerecha, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD);
     }
 
     int sumaParcial = valor + sumaIzquierda + sumaDerecha;
@@ -54,6 +54,7 @@ int recorrerArbol(int nodo, int rango, int valor, int numNodos, int tamanio) {
     fflush(stdout);
 
     if (nodo != RAIZ) {
+        MPI_Barrier(MPI_COMM_WORLD);
         int rangoPadre = (nodo - 1) / 2 % tamanio;
         MPI_Send(&sumaParcial, 1, MPI_INT, rangoPadre, 0, MPI_COMM_WORLD);
     }
