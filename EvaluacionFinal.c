@@ -80,9 +80,10 @@ int main(int argc, char** argv) {
         fflush(stdout);
     }
 
+    int sumaTotal = 0;
     // Cada proceso maneja múltiples nodos si numNodos > tamanio
     for (int nodo = rango; nodo < numNodos; nodo += tamanio) {
-        recorrerArbol(nodo, rango, valorInicial, numNodos, tamanio);
+        sumaTotal += recorrerArbol(nodo, rango, valorInicial, numNodos, tamanio);
     }
 
     // Barrera para esperar que todos los procesos terminen
@@ -90,6 +91,7 @@ int main(int argc, char** argv) {
 
     if (rango == RAIZ) {
         double fin = MPI_Wtime(); // Fin del tiempo de ejecución
+        printf("Resultado final de la suma en el nodo raíz: %d\n", sumaTotal);
         printf("Tiempo total de ejecución: %f segundos\n", fin - inicio);
         fflush(stdout);
     }
