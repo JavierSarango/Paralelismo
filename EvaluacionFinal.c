@@ -83,12 +83,7 @@ int main(int argc, char** argv) {
 
     // Cada proceso maneja múltiples nodos si numNodos > tamanio
     for (int nodo = rango; nodo < numNodos; nodo += tamanio) {
-        // Si el nodo es el nodo raíz, usa el valor inicial
-        if (nodo == RAIZ) {
-            recorrerArbol(nodo, rango, valorInicial, numNodos, tamanio);
-        } else {
-            recorrerArbol(nodo, rango, valorInicial, numNodos, tamanio);
-        }
+        recorrerArbol(nodo, rango, valorInicial, numNodos, tamanio);
     }
 
     MPI_Finalize();
