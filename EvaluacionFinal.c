@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <mpi.h>
 
 #define RAIZ 0
@@ -30,6 +31,12 @@ int recibir_y_sumar(int num_procesos) {
     return suma;
 }
 
+// Función para calcular el número de nodos en un árbol binario completo
+int calcular_numero_nodos(int num_procesos) {
+    int profundidad = (int)log2(num_procesos + 1);
+    return (1 << (profundidad + 1)) - 1;
+}
+
 // Función principal
 int main(int argc, char *argv[]) {
     int rango, num_procesos;
@@ -51,6 +58,9 @@ int main(int argc, char *argv[]) {
     valor_inicial = atoi(argv[1]);
 
     if (rango == RAIZ) {
+        int num_nodos = calcular_numero_nodos(num_procesos);
+        printf("Número total de procesos (nodos): %d\n", num_procesos);
+        printf("Número total de nodos en el árbol binario: %d\n", num_nodos);
         tiempo_inicio = MPI_Wtime();
     }
 
