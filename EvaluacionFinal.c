@@ -30,36 +30,41 @@ void encontrarHijos(int nodo, int numNodos, int* hijoIzquierdo, int* hijoDerecho
     }
 }
 
-// Función para realizar el recorrido del árbol y sumar parcial
-int recorrerArbol(int nodo, int valor, int numNodos, int tamanio) {
+// Función para realizar el recorrido del árbol y suma parcial
+int recorrerArbol(int nodo, int rango, int valor, int numNodos, int tamanio) {
     int hijoIzquierdo, hijoDerecho;
     encontrarHijos(nodo, numNodos, &hijoIzquierdo, &hijoDerecho);
 
     int sumaIzquierda = 0, sumaDerecha = 0;
 
-    // Enviar valor a los hijos y recibir sumas parciales
-    if (hijoIzquierdo != -1 && hijoIzquierdo < numNodos) {
+    if (hijoIzquierdo != -1) {
         int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
+        printf("Nodo %d enviando a hijo izquierdo %d (proceso %d)\n", nodo, hijoIzquierdo, rangoHijoIzquierdo);
+        fflush(stdout);
         MPI_Send(&valor, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD);
         MPI_Recv(&sumaIzquierda, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        printf("Nodo %d recibió suma parcial de su hijo izquierdo %d: %d\n", nodo, hijoIzquierdo, sumaIzquierda);
+        printf("Nodo %d recibió de hijo izquierdo %d (proceso %d): %d\n", nodo, hijoIzquierdo, rangoHijoIzquierdo, sumaIzquierda);
         fflush(stdout);
     }
 
-    if (hijoDerecho != -1 && hijoDerecho < numNodos) {
+    if (hijoDerecho != -1) {
         int rangoHijoDerecho = hijoDerecho % tamanio;
+        printf("Nodo %d enviando a hijo derecho %d (proceso %d)\n", nodo, hijoDerecho, rangoHijoDerecho);
+        fflush(stdout);
         MPI_Send(&valor, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD);
         MPI_Recv(&sumaDerecha, 1, MPI_INT, rangoHijoDerecho, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        printf("Nodo %d recibió suma parcial de su hijo derecho %d: %d\n", nodo, hijoDerecho, sumaDerecha);
+        printf("Nodo %d recibió de hijo derecho %d (proceso %d): %d\n", nodo, hijoDerecho, rangoHijoDerecho, sumaDerecha);
         fflush(stdout);
     }
 
     int sumaParcial = valor + sumaIzquierda + sumaDerecha;
-    printf("Nodo %d (Proceso %d): suma parcial = %d\n", nodo, MPI_COMM_WORLD, sumaParcial);
+    printf("Nodo %d (Proceso %d): suma parcial = %d\n", nodo, rango, sumaParcial);
     fflush(stdout);
 
     if (nodo != RAIZ) {
         int rangoPadre = (nodo - 1) / 2 % tamanio;
+        printf("Nodo %d enviando suma parcial %d a su padre (proceso %d)\n", nodo, sumaParcial, rangoPadre);
+        fflush(stdout);
         MPI_Send(&sumaParcial, 1, MPI_INT, rangoPadre, 0, MPI_COMM_WORLD);
     }
 
@@ -79,6 +84,7 @@ int main(int argc, char** argv) {
     // Inicializar el número de nodos y el valor inicial
     inicializarArbol(&numNodos, &valorInicial, rango);
 
+    // Depuración: mostrar el número de nodos y el valor inicial
     if (rango == RAIZ) {
         printf("Número de nodos: %d, Valor inicial: %d\n", numNodos, valorInicial);
         fflush(stdout);
@@ -87,7 +93,7 @@ int main(int argc, char** argv) {
     int sumaTotal = 0;
     // Cada proceso maneja múltiples nodos si numNodos > tamanio
     for (int nodo = rango; nodo < numNodos; nodo += tamanio) {
-        sumaTotal += recorrerArbol(nodo, valorInicial, numNodos, tamanio);
+        sumaTotal += recorrerArbol(nodo, rango, valorInicial, numNodos, tamanio);
     }
 
     // Barrera para esperar que todos los procesos terminen
