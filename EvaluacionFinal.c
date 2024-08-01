@@ -65,7 +65,9 @@ int recibirYSumar(int nodo, int valor, int numNodos, int tamanio) {
     }
 
     int sumaParcial = valor + sumaIzquierda + sumaDerecha;
-    printf("Nodo %d (Proceso %d): suma parcial = %d\n", nodo, rango, sumaParcial);
+    int rangoProceso;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rangoProceso); // Obtener el rango del proceso actual
+    printf("Nodo %d (Proceso %d): suma parcial = %d\n", nodo, rangoProceso, sumaParcial);
     fflush(stdout);
 
     if (nodo != RAIZ) {
