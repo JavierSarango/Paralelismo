@@ -53,6 +53,7 @@ int recibirYSumar(int nodo, int valor, int numNodos, int tamanio) {
 
     int sumaIzquierda = 0, sumaDerecha = 0;
 
+    // Recibir suma de hijos
     if (hijoIzquierdo != -1) {
         int rangoHijoIzquierdo = hijoIzquierdo % tamanio;
         MPI_Recv(&sumaIzquierda, 1, MPI_INT, rangoHijoIzquierdo, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
