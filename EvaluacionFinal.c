@@ -60,6 +60,28 @@ void liberar_arbol(NodoArbol *raiz) {
     }
 }
 
+// Función para asignar tareas a los nodos de MPI
+void asignar_tareas(NodoArbol *raiz, int rango) {
+    if (raiz == NULL) {
+        return;
+    }
+    if (2 * rango + 1 < MPI_COMM_WORLD) {
+        MPI_Send(&raiz->valor, 1, MPI_INT, 2 * rango + 1, 0, MPI_COMM_WORLD);
+        asignar_tareas(raiz->izquierdo, 2 * rango + 1);
+    }
+    if (2 * rango + 2 < MPI_COMM_WORLD) {
+        MPI_Send(&raiz->valor, 1, MPI_INT, 2 * rango + 2, 0, MPI_COMM_WORLD);
+        asignar_tareas(raiz->derecho, 2 * rango + 2);
+    }
+}
+
+// Función para recibir tareas en los nodos de MPI
+int recibir_tareas(int rango) {
+    int valor;
+    MPI_Recv(&valor, 1, MPI_INT, (rango - 1) / 2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    return valor;
+}
+
 int main(int argc, char **argv) {
     int num_nodos, valor_a_sumar;
     int rango, tamaño;
@@ -88,27 +110,29 @@ int main(int argc, char **argv) {
     // Iniciar la medición del tiempo
     double tiempo_inicio = MPI_Wtime();
 
-    // Enviar el número a sumar a los nodos hijo
-    if (raiz != NULL) {
-        if (raiz->izquierdo != NULL) {
-            MPI_Send(&valor_a_sumar, 1, MPI_INT, 2 * rango + 1, 0, MPI_COMM_WORLD);
-        }
-        if (raiz->derecho != NULL) {
-            MPI_Send(&valor_a_sumar, 1, MPI_INT, 2 * rango + 2, 0, MPI_COMM_WORLD);
-        }
-    }
-
-    // Recibir el número a sumar de los nodos padre
-    if (rango != 0) {
-        MPI_Recv(&valor_a_sumar, 1, MPI_INT, (rango - 1) / 2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    // Enviar el valor a sumar desde el nodo raíz a los hijos
+    if (rango == 0) {
+        asignar_tareas(raiz, rango);
+    } else {
+        valor_a_sumar = recibir_tareas(rango);
     }
 
     // Calcular la suma de los valores de los nodos del árbol en cada proceso
     int suma_local = sumar_arbol(raiz) + valor_a_sumar;
     int suma_total = 0;
 
-    // Recopilar las sumas locales en el proceso 0
-    MPI_Reduce(&suma_local, &suma_total, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    // Enviar la suma local al nodo padre y recibir las sumas parciales
+    if (rango != 0) {
+        MPI_Send(&suma_local, 1, MPI_INT, (rango - 1) / 2, 0, MPI_COMM_WORLD);
+    } else {
+        for (int i = 1; i < tamaño; i++) {
+            int suma_parcial;
+            MPI_Recv(&suma_parcial, 1, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            suma_local += suma_parcial;
+            printf("Proceso %d, suma parcial: %d\n", i, suma_parcial);
+        }
+        suma_total = suma_local;
+    }
 
     // Detener la medición del tiempo
     double tiempo_fin = MPI_Wtime();
@@ -120,7 +144,9 @@ int main(int argc, char **argv) {
     }
 
     // Mostrar sumas parciales en cada proceso
-    printf("Proceso %d, suma parcial: %d\n", rango, suma_local);
+    if (rango != 0) {
+        printf("Proceso %d, suma parcial: %d\n", rango, suma_local);
+    }
 
     // Liberar memoria
     if (raiz != NULL) {
