@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
     }
 
     // Barrera para asegurarse de que todos los procesos hayan enviado los mensajes
-    MPI_Barrier(MPI_COMM_WORLD);
+    //MPI_Barrier(MPI_COMM_WORLD);
 
     int sumaTotal = 0;
     // Recibir mensajes de los hijos y sumar
