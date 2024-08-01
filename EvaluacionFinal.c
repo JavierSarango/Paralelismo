@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <mpi.h>
 
 #define RAIZ 0
@@ -24,7 +23,7 @@ int recibir_y_sumar(int nodo_actual, int num_nodos, int num_procesos) {
     int hijo_izquierdo = nodo_actual * 2 + 1;
     int hijo_derecho = nodo_actual * 2 + 2;
     int suma = 0;
-    
+
     for (int i = 0; i < num_hijos; i++) {
         int hijo = (i == 0) ? hijo_izquierdo : hijo_derecho;
         if (hijo < num_nodos && hijo < num_procesos) {
@@ -71,22 +70,27 @@ int main(int argc, char *argv[]) {
     // Lógica de envío y recepción de mensajes
     if (nodo_actual < num_nodos) {
         if (nodo_actual == RAIZ) {
+            // El nodo raíz envía el valor a sus hijos
             enviar_a_hijos(valor_inicial, nodo_actual, num_nodos, num_procesos);
+            // Recibe la suma de sus hijos y suma el valor inicial
             int resultado = recibir_y_sumar(nodo_actual, num_nodos, num_procesos) + valor_inicial;
             printf("Resultado final en el nodo 0: %d\n", resultado);
         } else {
             int valor_recibido;
             MPI_Recv(&valor_recibido, 1, MPI_INT, RAIZ, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
+            // Suma el valor recibido con los valores de los hijos
             int valor_suma = valor_recibido;
             printf("Nodo %d recibió valor %d de su padre\n", nodo_actual, valor_recibido);
 
             if (nodo_actual * 2 + 1 < num_nodos) {
+                // Enviar el valor recibido a los hijos
                 enviar_a_hijos(valor_suma, nodo_actual, num_nodos, num_procesos);
-                int suma_hijos = recibir_y_sumar(nodo_actual, num_nodos, num_procesos);
-                valor_suma += suma_hijos;
+                // Recibir y sumar los valores de los hijos
+                valor_suma += recibir_y_sumar(nodo_actual, num_nodos, num_procesos);
             }
 
+            // Enviar la suma parcial al nodo padre
             MPI_Send(&valor_suma, 1, MPI_INT, RAIZ, 0, MPI_COMM_WORLD);
             printf("Nodo %d envió suma parcial %d al nodo padre\n", nodo_actual, valor_suma);
         }
